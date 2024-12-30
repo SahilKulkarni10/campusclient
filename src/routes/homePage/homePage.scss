@@ -1,4 +1,5 @@
 
+
 // @import "../../responsive.scss";
 
 // @keyframes fadeInUp {
@@ -76,6 +77,7 @@
 
 //       @include sm {
 //         justify-content: flex-start;
+//         padding: 20px;
 //       }
 
 //       .title {
@@ -83,6 +85,10 @@
 
 //         @include lg {
 //           font-size: 48px;
+//         }
+
+//         @include sm {
+//           font-size: 36px;
 //         }
 
 //         &.animateTitle {
@@ -130,6 +136,10 @@
 //     .body {
 //       h1 {
 //         font-size: 36px;
+
+//         @include sm {
+//           font-size: 24px;
+//         }
 //       }
 
 //       .cardContainer {
@@ -140,6 +150,7 @@
 
 //         @include sm {
 //           grid-template-columns: repeat(1, 1fr);
+//           gap: 15px;
 //         }
 
 //         @include md {
@@ -149,8 +160,6 @@
 //         @include lg {
 //           margin-top: 40px;
 //         }
-
-       
 
 //         .card {
 //           .imageContainer {
@@ -265,7 +274,6 @@
 //       position: absolute;
 //       right: 0;
 //       border-radius: 2cm;
-      
 
 //       @include lg {
 //         width: 105%;
@@ -299,7 +307,26 @@
 //       animation: bgAnimation2 15s ease infinite;
 //     }
 //   }
+
+//   @media (max-width: 768px) {
+//     flex-direction: column;
+
+//     .imgContainer {
+//       display: none;
+//     }
+
+//     .textContainer {
+//       flex: 1;
+//       padding: 20px;
+
+//       .wrapper {
+//         padding-right: 0;
+//       }
+//     }
+//   }
 // }
+
+
 
 
 
@@ -357,10 +384,14 @@
 
 .homePage {
   display: flex;
-  height: 100%;
+  flex-direction: column; // Allow stacking on smaller devices
+  min-height: 100vh;
+  height: auto; // Allow dynamic height
+  overflow-y: auto; // Enable vertical scrolling
 
   .textContainer {
     flex: 3;
+    padding: 20px;
 
     .wrapper {
       padding-right: 100px;
@@ -380,7 +411,6 @@
 
       @include sm {
         justify-content: flex-start;
-        padding: 20px;
       }
 
       .title {
@@ -388,10 +418,6 @@
 
         @include lg {
           font-size: 48px;
-        }
-
-        @include sm {
-          font-size: 36px;
         }
 
         &.animateTitle {
@@ -439,10 +465,6 @@
     .body {
       h1 {
         font-size: 36px;
-
-        @include sm {
-          font-size: 24px;
-        }
       }
 
       .cardContainer {
@@ -452,8 +474,7 @@
         margin-top: 30px;
 
         @include sm {
-          grid-template-columns: repeat(1, 1fr);
-          gap: 15px;
+          grid-template-columns: 1fr; // Stacked cards on small screens
         }
 
         @include md {
@@ -583,7 +604,6 @@
       }
     }
 
-    // Continuous background animations
     &:before {
       content: "";
       position: absolute;
@@ -608,23 +628,6 @@
       background: linear-gradient(45deg, #00ffca, #008aff, #f800ff, #ff7300);
       background-size: 400% 400%;
       animation: bgAnimation2 15s ease infinite;
-    }
-  }
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-
-    .imgContainer {
-      display: none;
-    }
-
-    .textContainer {
-      flex: 1;
-      padding: 20px;
-
-      .wrapper {
-        padding-right: 0;
-      }
     }
   }
 }
