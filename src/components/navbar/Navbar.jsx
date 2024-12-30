@@ -54,10 +54,12 @@ function Navbar() {
         <div className={open ? "menu active" : "menu"}>
           <a href="/">Home</a>
           <a href="/">About</a>
+          <a href="/profile">Profile</a>
           <a href="mailto:kulkarnisahil882@gmail.com">Contact</a>
           <a href="/community">Community</a>
           <a href="/login">Sign in</a>
           <a href="/register">Sign up</a>
+        
         </div>
       </div>
     </nav>
