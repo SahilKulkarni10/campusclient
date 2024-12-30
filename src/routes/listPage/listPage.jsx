@@ -1,5 +1,5 @@
 import "./listPage.scss";
-import Filter from "../../components/filter/Filter";
+
 import Card from "../../components/card/Card";
 import Map from "../../components/map/Map";
 import { Await, useLoaderData } from "react-router-dom";
@@ -12,7 +12,7 @@ function ListPage() {
     <div className="listPage">
       <div className="listContainer">
         <div className="wrapper">
-          <Filter />
+
           <Suspense fallback={<p>Loading...</p>}>
             <Await
               resolve={data.postResponse}

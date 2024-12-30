@@ -13,13 +13,13 @@ function HomePage() {
       id: 1,
       title: "Hackathon A",
       address: "Nashik",
-      price: 1000,
+      price: 1200,
     },
     {
       id: 2,
       title: "Hackathon B",
       address: "Mumbai",
-      price: 1500,
+      price: 1200,
     },
   ];
 

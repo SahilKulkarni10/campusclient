@@ -18,7 +18,7 @@ function Navbar() {
     <nav>
       <div className="left">
         <a href="/" className="logo">
-          <img src="/logo.png" alt="" />
+          <img src="/cc.png" alt="" />
           <span>Campus Connect</span>
         </a>
         <a href="/">Home</a>
@@ -55,9 +55,9 @@ function Navbar() {
           <a href="/">Home</a>
           <a href="/">About</a>
           <a href="mailto:kulkarnisahil882@gmail.com">Contact</a>
-          <a href="/">Agents</a>
-          <a href="/">Sign in</a>
-          <a href="/">Sign up</a>
+          <a href="/community">Community</a>
+          <a href="/login">Sign in</a>
+          <a href="/register">Sign up</a>
         </div>
       </div>
     </nav>
