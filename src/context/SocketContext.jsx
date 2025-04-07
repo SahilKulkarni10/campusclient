@@ -7,7 +7,7 @@ import { useNotificationStore } from "../lib/notificationStore";
 const SOCKET_URL =
   window.location.hostname === "localhost"
     ? "http://localhost:8800" // Local development
-    : "https://campus-test-zz76.vercel.app"; // Production
+    : "https://campusbackend-v4vp.onrender.com"; // Production
 
 export const SocketContext = createContext();
 
