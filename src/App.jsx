@@ -9,8 +9,7 @@ import Register from "./routes/register/register";
 import Community from "./routes/community/community";
 import ProfileUpdatePage from "./routes/profileUpdatePage/profileUpdatePage";
 import NewPostPage from "./routes/newPostPage/newPostPage";
-import { listPageLoader, profilePageLoader, singlePageLoader } from "./lib/loaders";
-import Chat from "./components/chat/Chat";
+import { listPageLoader, singlePageLoader } from "./lib/loaders";
 
 function App() {
   const router = createBrowserRouter([
@@ -28,11 +27,22 @@ function App() {
           loader: listPageLoader,
         },
         {
-          path: "/:id",
+          path: "/event/:id",
           element: <SinglePage />,
           // loader: singlePageLoader,
         },
-
+        {
+          path: "/hackathon/:id",
+          element: <SinglePage />,
+        },
+        {
+          path: "/seminar/:id",
+          element: <SinglePage />,
+        },
+        {
+          path: "/workshop/:id",
+          element: <SinglePage />,
+        },
         {
           path: "/login",
           element: <Login />,
@@ -43,7 +53,7 @@ function App() {
         },
         {
           path:"/community",
-          element:<Chat/>
+          element:<Community />
         }
       ],
     },
@@ -54,7 +64,6 @@ function App() {
         {
           path: "/profile",
           element: <ProfilePage />,
-          loader: profilePageLoader
         },
         {
           path: "/profile/update",
@@ -64,6 +73,10 @@ function App() {
           path: "/add",
           element: <NewPostPage />,
         },
+        {
+          path: "/forums/:forumId",
+          element: <Community />,
+        }
       ],
     },
   ]);

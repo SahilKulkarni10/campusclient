@@ -1,265 +1,174 @@
-// import "./singlePage.scss";
-// import Slider from "../../components/slider/Slider";
-// import Map from "../../components/map/Map";
-// import { useNavigate, useLoaderData } from "react-router-dom";
-// import DOMPurify from "dompurify";
-// import { useContext, useState } from "react";
-// import { AuthContext } from "../../context/AuthContext";
-// import apiRequest from "../../lib/apiRequest";
-
-// function SinglePage() {
-//   const post = useLoaderData();
-//   const [saved, setSaved] = useState(post.isSaved);
-//   const { currentUser } = useContext(AuthContext);
-//   const navigate = useNavigate();
-
-//   const handleSave = async () => {
-//     if (!currentUser) {
-//       navigate("/login");
-//     }
-//     // AFTER REACT 19 UPDATE TO USEOPTIMISTIK HOOK
-//     setSaved((prev) => !prev);
-//     try {
-//       await apiRequest.post("/users/save", { postId: post.id });
-//     } catch (err) {
-//       console.log(err);
-//       setSaved((prev) => !prev);
-//     }
-//   };
-
-//   return (
-//     <div className="singlePage">
-//       <div className="details">
-//         <div className="wrapper">
-//           <Slider images={post.images} />
-//           <div className="info">
-//             <div className="top">
-//               <div className="post">
-//                 <h1>{post.title}</h1>
-//                 <div className="address">
-//                   <img src="/pin.png" alt="" />
-//                   <span>{post.address}</span>
-//                 </div>
-//                 <div className="price">$ {post.price}</div>
-//               </div>
-//               <div className="user">
-//                 <img src={post.user.avatar} alt="" />
-//                 <span>{post.user.username}</span>
-//               </div>
-//             </div>
-//             <div
-//               className="bottom"
-//               dangerouslySetInnerHTML={{
-//                 __html: DOMPurify.sanitize(post.postDetail.desc),
-//               }}
-//             ></div>
-//           </div>
-//         </div>
-//       </div>
-//       <div className="features">
-//         <div className="wrapper">
-//           <p className="title">General</p>
-//           <div className="listVertical">
-//             <div className="feature">
-//               <img src="/utility.png" alt="" />
-//               <div className="featureText">
-//                 <span>Utilities</span>
-//                 {post.postDetail.utilities === "owner" ? (
-//                   <p>Owner is responsible</p>
-//                 ) : (
-//                   <p>Tenant is responsible</p>
-//                 )}
-//               </div>
-//             </div>
-//             <div className="feature">
-//               <img src="/pet.png" alt="" />
-//               <div className="featureText">
-//                 <span>Pet Policy</span>
-//                 {post.postDetail.pet === "allowed" ? (
-//                   <p>Pets Allowed</p>
-//                 ) : (
-//                   <p>Pets not Allowed</p>
-//                 )}
-//               </div>
-//             </div>
-//             <div className="feature">
-//               <img src="/fee.png" alt="" />
-//               <div className="featureText">
-//                 <span>Income Policy</span>
-//                 <p>{post.postDetail.income}</p>
-//               </div>
-//             </div>
-//           </div>
-//           <p className="title">Sizes</p>
-//           <div className="sizes">
-//             <div className="size">
-//               <img src="/size.png" alt="" />
-//               <span>{post.postDetail.size} sqft</span>
-//             </div>
-//             <div className="size">
-//               <img src="/bed.png" alt="" />
-//               <span>{post.bedroom} beds</span>
-//             </div>
-//             <div className="size">
-//               <img src="/bath.png" alt="" />
-//               <span>{post.bathroom} bathroom</span>
-//             </div>
-//           </div>
-//           <p className="title">Nearby Places</p>
-//           <div className="listHorizontal">
-//             <div className="feature">
-//               <img src="/school.png" alt="" />
-//               <div className="featureText">
-//                 <span>School</span>
-//                 <p>
-//                   {post.postDetail.school > 999
-//                     ? post.postDetail.school / 1000 + "km"
-//                     : post.postDetail.school + "m"}{" "}
-//                   away
-//                 </p>
-//               </div>
-//             </div>
-//             <div className="feature">
-//               <img src="/pet.png" alt="" />
-//               <div className="featureText">
-//                 <span>Bus Stop</span>
-//                 <p>{post.postDetail.bus}m away</p>
-//               </div>
-//             </div>
-//             <div className="feature">
-//               <img src="/fee.png" alt="" />
-//               <div className="featureText">
-//                 <span>Restaurant</span>
-//                 <p>{post.postDetail.restaurant}m away</p>
-//               </div>
-//             </div>
-//           </div>
-//           <p className="title">Location</p>
-//           <div className="mapContainer">
-//             <Map items={[post]} />
-//           </div>
-//           <div className="buttons">
-//             <button>
-//               <img src="/chat.png" alt="" />
-//               Send a Message
-//             </button>
-//             <button
-//               onClick={handleSave}
-//               style={{
-//                 backgroundColor: saved ? "#fece51" : "white",
-//               }}
-//             >
-//               <img src="/save.png" alt="" />
-//               {saved ? "Place Saved" : "Save the Place"}
-//             </button>
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default SinglePage;
-
-
 import "./singlePage.scss";
 import Slider from "../../components/slider/Slider";
 import Map from "../../components/map/Map";
-import { singlePostData, userData } from "../../lib/dummydata";
+import { useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { format } from "date-fns";
 
 function SinglePage() {
+  const { id } = useParams();
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [eventType, setEventType] = useState("event"); // Default event type
+
+  useEffect(() => {
+    // Determine event type from URL
+    const path = window.location.pathname;
+    if (path.includes("/hackathon/")) {
+      setEventType("hackathon");
+    } else if (path.includes("/seminar/")) {
+      setEventType("seminar");
+    } else if (path.includes("/workshop/")) {
+      setEventType("workshop");
+    } else {
+      setEventType("event");
+    }
+
+    const fetchEvent = async () => {
+      try {
+        const res = await axios.get(`http://localhost:8800/api/posts/${id}`);
+        // Add default coordinates for India if not present
+        const eventData = {
+          ...res.data,
+          latitude: res.data.latitude || 20.5937,
+          longitude: res.data.longitude || 78.9629
+        };
+        setEvent(eventData);
+      } catch (error) {
+        console.error("Error fetching event:", error);
+        // Fallback to mock data if API fails
+        setEvent({
+          id: id,
+          title: "CodeCraft Hackathon 2023",
+          address: "Engineering Building, Nashik",
+          price: 1200,
+          category: eventType,
+          description: "A 48-hour coding challenge to build innovative solutions for real-world problems.",
+          date: "2023-11-15",
+          images: ["/hac.jpg"],
+          participants: 100,
+          duration: "48 hours",
+          requirements: ["Laptop", "Student ID", "Basic programming knowledge"],
+          prizes: ["₹50,000", "₹25,000", "₹10,000"],
+          latitude: 20.5937,
+          longitude: 78.9629
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchEvent();
+  }, [id, eventType]);
+
+  if (loading) {
+    return (
+      <div className="loading">
+        <div className="spinner"></div>
+        <p>Loading event details...</p>
+      </div>
+    );
+  }
+
+  if (!event) {
+    return <div className="error">Event not found</div>;
+  }
+
+  const formattedDate = event.date ? format(new Date(event.date), "MMMM dd, yyyy") : null;
+
+  // Get event type display name
+  const getEventTypeDisplay = () => {
+    switch (eventType) {
+      case "hackathon":
+        return "Hackathon";
+      case "seminar":
+        return "Seminar";
+      case "workshop":
+        return "Workshop";
+      default:
+        return "Event";
+    }
+  };
+
   return (
-    <div className="singlePage">
+    <div className={`singlePage ${eventType}`}>
       <div className="details">
         <div className="wrapper">
-          <Slider images={singlePostData.images} />
+          {event.images && event.images.length > 0 && (
+            <Slider images={event.images} />
+          )}
           <div className="info">
             <div className="top">
               <div className="post">
-                <h1>{singlePostData.title}</h1>
+                <div className="eventType">{getEventTypeDisplay()}</div>
+                <h1>{event.title}</h1>
                 <div className="address">
                   <img src="/pin.png" alt="" />
-                  <span>{singlePostData.address}</span>
+                  <span>{event.address}</span>
                 </div>
-                <div className="price">$ {singlePostData.price}</div>
-              </div>
-              <div className="user">
-                <img src={userData.img} alt="" />
-                <span>{userData.name}</span>
+                <div className="price">₹{event.price}</div>
               </div>
             </div>
-            <div className="bottom">{singlePostData.description}</div>
+            <div className="bottom">
+              <p className="description">{event.description}</p>
+              
+              <div className="eventDetails">
+                {formattedDate && (
+                  <div className="detailItem">
+                    <span className="icon">📅</span>
+                    <span className="text">{formattedDate}</span>
+                  </div>
+                )}
+                
+                {event.duration && (
+                  <div className="detailItem">
+                    <span className="icon">⏱️</span>
+                    <span className="text">{event.duration}</span>
+                  </div>
+                )}
+                
+                {event.participants && (
+                  <div className="detailItem">
+                    <span className="icon">👥</span>
+                    <span className="text">{event.participants} participants</span>
+                  </div>
+                )}
+              </div>
+
+              {event.requirements && (
+                <div className="requirements">
+                  <h3>Requirements</h3>
+                  <ul>
+                    {event.requirements.map((req, index) => (
+                      <li key={index}>{req}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {event.prizes && (
+                <div className="prizes">
+                  <h3>Prizes</h3>
+                  <div className="prizeList">
+                    {event.prizes.map((prize, index) => (
+                      <div key={index} className="prizeItem">
+                        <span className="position">{index + 1}st</span>
+                        <span className="amount">{prize}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
       <div className="features">
         <div className="wrapper">
-          <p className="title">General</p>
-          <div className="listVertical">
-            <div className="feature">
-              <img src="/team.png" alt="" />
-              <div className="featureText">
-                <span>Registered</span>
-                <p>2,221</p>
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/team.png" alt="" />
-              <div className="featureText">
-                <span>Team Size</span>
-                <p>1 - 4 Members</p>
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/registration.png" alt="" />
-              <div className="featureText">
-                <span>Registration Deadline</span>
-                <p>20 Oct 24, 11:59 PM IST</p>
-              </div>
-            </div>
-          </div>
-          {/* <p className="title">Sizes</p>
-          <div className="sizes">
-            <div className="size">
-              <img src="/size.png" alt="" />
-              <span>80 sqft</span>
-            </div>
-            <div className="size">
-              <img src="/bed.png" alt="" />
-              <span>2 beds</span>
-            </div>
-            <div className="size">
-              <img src="/bath.png" alt="" />
-              <span>1 bathroom</span>
-            </div>
-          </div>
-          <p className="title">Nearby Places</p>
-          <div className="listHorizontal">
-            <div className="feature">
-              <img src="/school.png" alt="" />
-              <div className="featureText">
-                <span>School</span>
-                <p>250m away</p>
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/pet.png" alt="" />
-              <div className="featureText">
-                <span>Bus Stop</span>
-                <p>100m away</p>
-              </div>
-            </div>
-            <div className="feature">
-              <img src="/fee.png" alt="" />
-              <div className="featureText">
-                <span>Restaurant</span>
-                <p>200m away</p>
-              </div>
-            </div>
-          </div> */}
           <p className="title">Location</p>
           <div className="mapContainer">
-            <Map items={[singlePostData]} />
+            <Map items={[event]} />
           </div>
           <div className="buttons">
             <button>
@@ -268,7 +177,7 @@ function SinglePage() {
             </button>
             <button>
               <img src="/save.png" alt="" />
-              Save the Place
+              Save the Event
             </button>
           </div>
         </div>
