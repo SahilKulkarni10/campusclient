@@ -16,7 +16,7 @@ function Chat({ chats: initialChats }) {
   const [typingUsers, setTypingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { currentUser } = useContext(AuthContext);
-  const { socket } = useContext(SocketContext);
+  const { socket, connectionStatus } = useContext(SocketContext);
   const messageEndRef = useRef();
   const typingTimeoutRef = useRef(null);
   const decrease = useNotificationStore((state) => state.decrease);
@@ -142,7 +142,7 @@ function Chat({ chats: initialChats }) {
       }));
       
       // Emit socket event
-      if (socket) {
+      if (socket && socket.connected) {
         socket.emit("sendMessage", {
           receiverId: chat.receiver.id,
           data: res.data,
@@ -181,10 +181,12 @@ function Chat({ chats: initialChats }) {
     if (!isTyping && chat) {
       setIsTyping(true);
       // Emit typing event
-      socket?.emit("typing", {
-        receiverId: chat.receiver.id,
-        isTyping: true
-      });
+      if (socket && socket.connected) {
+        socket.emit("typing", {
+          receiverId: chat.receiver.id,
+          isTyping: true
+        });
+      }
     }
     
     // Set timeout to clear typing status after 3 seconds
@@ -195,10 +197,12 @@ function Chat({ chats: initialChats }) {
     if (isTyping && chat) {
       setIsTyping(false);
       // Emit stop typing event
-      socket?.emit("typing", {
-        receiverId: chat.receiver.id,
-        isTyping: false
-      });
+      if (socket && socket.connected) {
+        socket.emit("typing", {
+          receiverId: chat.receiver.id,
+          isTyping: false
+        });
+      }
     }
   };
 
@@ -208,6 +212,23 @@ function Chat({ chats: initialChats }) {
 
   const isReceiverTyping = () => {
     return chat && typingUsers[chat.receiver.id];
+  };
+
+  const renderConnectionStatus = () => {
+    if (connectionStatus === 'error') {
+      return (
+        <div className="connection-error">
+          Unable to connect to chat server. Messages will still be saved but real-time updates are disabled.
+          <button className="reconnect-btn" onClick={() => socket.connect()}>
+            Try to reconnect
+          </button>
+        </div>
+      );
+    }
+    if (connectionStatus === 'disconnected') {
+      return <div className="connection-warning">Disconnected from chat server. Trying to reconnect...</div>;
+    }
+    return null;
   };
 
   return (
@@ -241,6 +262,7 @@ function Chat({ chats: initialChats }) {
             </div>
           ))
         )}
+        {renderConnectionStatus()}
       </div>
       
       {chat && (
@@ -282,25 +304,18 @@ function Chat({ chats: initialChats }) {
             <div ref={messageEndRef}></div>
           </div>
           
-          <form onSubmit={handleSubmit} className="bottom">
-            <textarea 
-              name="text" 
-              placeholder="Type a message..."
-              value={messageText}
-              onChange={(e) => setMessageText(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit(e);
-                } else {
-                  handleTyping();
-                }
-              }}
-            />
-            <button type="submit" disabled={loading || !messageText.trim()}>
-              Send
-            </button>
-          </form>
+          <div className="bottom">
+            <form onSubmit={handleSubmit}>
+              <input
+                type="text"
+                placeholder="Write a message..."
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                onKeyDown={handleTyping}
+              />
+              <button>Send</button>
+            </form>
+          </div>
         </div>
       )}
     </div>

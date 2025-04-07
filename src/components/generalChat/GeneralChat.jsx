@@ -14,7 +14,7 @@ function GeneralChat() {
   const [typingUsers, setTypingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { currentUser } = useContext(AuthContext);
-  const { socket } = useContext(SocketContext);
+  const { socket, connectionStatus } = useContext(SocketContext);
   const messageEndRef = useRef();
   const typingTimeoutRef = useRef(null);
 
@@ -105,7 +105,7 @@ function GeneralChat() {
       );
       
       // Emit socket event
-      if (socket) {
+      if (socket && socket.connected) {
         socket.emit("sendGeneralMessage", res.data);
       }
       
@@ -130,11 +130,13 @@ function GeneralChat() {
     if (!isTyping) {
       setIsTyping(true);
       // Emit typing event
-      socket?.emit("typingGeneral", {
-        senderId: currentUser.id,
-        username: currentUser.username,
-        isTyping: true
-      });
+      if (socket && socket.connected) {
+        socket.emit("typingGeneral", {
+          senderId: currentUser.id,
+          username: currentUser.username,
+          isTyping: true
+        });
+      }
     }
     
     // Set timeout to clear typing status after 3 seconds
@@ -145,11 +147,13 @@ function GeneralChat() {
     if (isTyping) {
       setIsTyping(false);
       // Emit stop typing event
-      socket?.emit("typingGeneral", {
-        senderId: currentUser.id,
-        username: currentUser.username,
-        isTyping: false
-      });
+      if (socket && socket.connected) {
+        socket.emit("typingGeneral", {
+          senderId: currentUser.id,
+          username: currentUser.username,
+          isTyping: false
+        });
+      }
     }
   };
 
@@ -166,6 +170,23 @@ function GeneralChat() {
     if (typingUsersList.length === 1) return `${typingUsersList[0]} is typing...`;
     if (typingUsersList.length === 2) return `${typingUsersList[0]} and ${typingUsersList[1]} are typing...`;
     return `${typingUsersList.length} people are typing...`;
+  };
+
+  const renderConnectionStatus = () => {
+    if (connectionStatus === 'error') {
+      return (
+        <div className="connection-error">
+          Unable to connect to chat server. Messages will still be saved but real-time updates are disabled.
+          <button className="reconnect-btn" onClick={() => socket.connect()}>
+            Try to reconnect
+          </button>
+        </div>
+      );
+    }
+    if (connectionStatus === 'disconnected') {
+      return <div className="connection-warning">Disconnected from chat server. Trying to reconnect...</div>;
+    }
+    return null;
   };
 
   return (
@@ -236,6 +257,7 @@ function GeneralChat() {
           </button>
         </form>
       </div>
+      {renderConnectionStatus()}
     </div>
   );
 }

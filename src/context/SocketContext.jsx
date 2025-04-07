@@ -9,21 +9,61 @@ const SOCKET_URL =
     ? import.meta.env.VITE_API_URL_DEV
     : import.meta.env.VITE_API_URL;
 
+// Fallback socket URL in case the main one doesn't work
+const FALLBACK_SOCKET_URL = "https://campusbackend-v4vp.onrender.com";
+
 export const SocketContext = createContext();
 
 export const SocketContextProvider = ({ children }) => {
   const { currentUser } = useContext(AuthContext);
   const [socket, setSocket] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
+  const [connectionStatus, setConnectionStatus] = useState('disconnected');
   const addNotification = useNotificationStore((state) => state.add);
 
   useEffect(() => {
     // Initialize the Socket.IO connection
-    const newSocket = io(SOCKET_URL, {
-      withCredentials: true, // Enable cookies for cross-origin requests
-    });
+    const connectToSocket = (url) => {
+      console.log(`Attempting to connect to socket server at: ${url}`);
+      
+      const newSocket = io(url, {
+        withCredentials: true, // Enable cookies for cross-origin requests
+        reconnectionAttempts: 5, // Try to reconnect 5 times
+        reconnectionDelay: 1000, // Start with a 1 second delay
+        reconnectionDelayMax: 5000, // Maximum delay between reconnections
+        timeout: 10000, // Connection timeout
+      });
 
-    setSocket(newSocket);
+      // Connection event listeners
+      newSocket.on('connect', () => {
+        console.log('Socket connected successfully');
+        setConnectionStatus('connected');
+      });
+
+      newSocket.on('connect_error', (err) => {
+        console.error('Socket connection error:', err.message);
+        setConnectionStatus('error');
+        
+        // If main URL fails, try fallback URL
+        if (url === SOCKET_URL && SOCKET_URL !== FALLBACK_SOCKET_URL) {
+          console.log('Trying fallback socket URL');
+          newSocket.disconnect();
+          connectToSocket(FALLBACK_SOCKET_URL);
+        }
+      });
+
+      newSocket.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason);
+        setConnectionStatus('disconnected');
+      });
+
+      setSocket(newSocket);
+      
+      return newSocket;
+    };
+    
+    // Start with the primary URL
+    const newSocket = connectToSocket(SOCKET_URL);
 
     // Clean up the socket connection when the component unmounts
     return () => newSocket.disconnect();
@@ -83,15 +123,15 @@ export const SocketContextProvider = ({ children }) => {
   }, [socket, currentUser, addNotification]);
 
   useEffect(() => {
-    // Emit "newUser" when currentUser is available
-    if (currentUser && socket) {
+    // Emit "newUser" when currentUser is available and socket is connected
+    if (currentUser && socket && socket.connected) {
       socket.emit("newUser", currentUser.id);
     }
-  }, [currentUser, socket]);
+  }, [currentUser, socket, connectionStatus]);
 
   // Function to emit typing status
   const emitTyping = (receiverId, isTyping) => {
-    if (socket && currentUser) {
+    if (socket && socket.connected && currentUser) {
       socket.emit("typing", {
         senderId: currentUser.id,
         receiverId,
@@ -100,11 +140,28 @@ export const SocketContextProvider = ({ children }) => {
     }
   };
 
+  // Function to manually reconnect socket
+  const reconnectSocket = () => {
+    if (socket) {
+      socket.disconnect();
+    }
+    const newSocket = io(FALLBACK_SOCKET_URL, {
+      withCredentials: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 10000,
+    });
+    setSocket(newSocket);
+  };
+
   return (
     <SocketContext.Provider value={{ 
       socket, 
       onlineUsers, 
-      emitTyping 
+      emitTyping,
+      connectionStatus,
+      reconnectSocket
     }}>
       {children}
     </SocketContext.Provider>
