@@ -12,15 +12,39 @@ const SOCKET_URL =
 // Fallback socket URLs in case the main one doesn't work
 // Try multiple variations to bypass connectivity issues
 const FALLBACK_URLS = [
+  // Direct URLs (not going through API paths)
   "wss://campusbackend-v4vp.onrender.com", 
   "https://campusbackend-v4vp.onrender.com",
-  // Remove any API path that might be causing issues
-  SOCKET_URL.replace(/\/api\/?.*$/, "")
+  // Strip any API path that might be causing issues
+  SOCKET_URL.replace(/\/api\/?.*$/, ""),
+  // Try with explicit websocket protocol
+  SOCKET_URL.replace(/^https?/, "wss"),
+  // Try with explicit http protocol for polling
+  SOCKET_URL.replace(/^https?/, "http")
 ];
+
+// For checking Render.com server status
+const checkServerStatus = async () => {
+  try {
+    const response = await fetch('https://campusbackend-v4vp.onrender.com/socket-test');
+    const data = await response.json();
+    console.log('Server status:', data);
+    return data;
+  } catch (error) {
+    console.error('Failed to get server status:', error);
+    return null;
+  }
+};
 
 // For debugging server connection issues
 const testServerConnection = async (url) => {
   try {
+    // Try to check server status first
+    const status = await checkServerStatus();
+    if (status) {
+      console.log('Server is running with', status.socketConnectionCount, 'socket connections');
+    }
+    
     const testUrl = url.startsWith('wss:') 
       ? url.replace('wss:', 'https:')
       : url;
@@ -29,10 +53,17 @@ const testServerConnection = async (url) => {
     const response = await fetch(testUrl, { 
       method: 'HEAD',
       mode: 'cors',
-      credentials: 'include'
+      credentials: 'include',
+      // Add cache control to prevent caching
+      headers: {
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0'
+      }
     });
     console.log(`Server response: ${response.status}`);
-    return response.ok || response.status === 404; // 404 is fine, it means server is running
+    // Any response means the server is running
+    return response.status < 500;
   } catch (error) {
     console.error('Server connection test failed:', error);
     return false;
@@ -62,14 +93,18 @@ export const SocketContextProvider = ({ children }) => {
     // Try different transport strategies for maximum compatibility
     const socketOptions = {
       withCredentials: true, // Enable cookies for cross-origin requests
-      reconnectionAttempts: 5, // Try to reconnect 5 times
+      reconnectionAttempts: 10, // Try to reconnect 10 times
       reconnectionDelay: 1000, // Start with a 1 second delay
-      reconnectionDelayMax: 5000, // Maximum delay between reconnections
-      timeout: 10000, // Connection timeout
+      reconnectionDelayMax: 10000, // Maximum delay between reconnections
+      timeout: 20000, // Connection timeout
       transports: ['websocket', 'polling'], // Try websocket first, then polling
       forceNew: true, // Force a new connection
-      autoConnect: true // Auto connect
+      autoConnect: true, // Auto connect
+      // Disable path for direct connections
+      path: url.includes('/socket.io') ? undefined : '/socket.io',
     };
+    
+    console.log('Socket options:', socketOptions);
     
     const newSocket = io(url, socketOptions);
     setSocket(newSocket);
@@ -81,6 +116,11 @@ export const SocketContextProvider = ({ children }) => {
   // Initialize the socket connection
   useEffect(() => {
     console.log('Initializing socket connection');
+    
+    // First check server status
+    checkServerStatus().then(status => {
+      console.log('Initial server status check:', status);
+    });
     
     const tryNextServer = async (index = 0) => {
       if (index >= FALLBACK_URLS.length + 1) {
@@ -250,6 +290,10 @@ export const SocketContextProvider = ({ children }) => {
     
     // Try all servers in sequence until one works
     const allUrls = [SOCKET_URL, ...FALLBACK_URLS];
+    
+    // Check server status first
+    await checkServerStatus();
+    
     let connected = false;
     
     for (let i = 0; i < allUrls.length; i++) {
