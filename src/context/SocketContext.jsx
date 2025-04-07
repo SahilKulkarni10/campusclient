@@ -4,10 +4,10 @@ import { AuthContext } from "./AuthContext";
 import { useNotificationStore } from "../lib/notificationStore";
 
 // Determine the URL for the Socket.IO server
-const SOCKET_URL =
-  window.location.hostname === "localhost"
-    ? "http://localhost:8800" // Local development
-    : "https://campusbackend-v4vp.onrender.com"; // Production
+const SOCKET_URL = 
+  import.meta.env.MODE === "development"
+    ? import.meta.env.VITE_API_URL_DEV
+    : import.meta.env.VITE_API_URL;
 
 export const SocketContext = createContext();
 
