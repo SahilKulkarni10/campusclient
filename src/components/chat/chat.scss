@@ -340,3 +340,22 @@
   font-size: 14px;
   text-align: center;
 }
+
+.connection-status {
+  font-size: 12px;
+  padding: 5px 10px;
+  margin-bottom: 10px;
+  text-align: center;
+  
+  &.connected {
+    color: #2ecc71;
+  }
+  
+  &.disconnected {
+    color: #f39c12;
+  }
+  
+  &.error {
+    color: #e74c3c;
+  }
+}

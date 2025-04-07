@@ -16,7 +16,7 @@ function Chat({ chats: initialChats }) {
   const [typingUsers, setTypingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { currentUser } = useContext(AuthContext);
-  const { socket, connectionStatus } = useContext(SocketContext);
+  const { socket, connectionStatus, reconnectSocket } = useContext(SocketContext);
   const messageEndRef = useRef();
   const typingTimeoutRef = useRef(null);
   const decrease = useNotificationStore((state) => state.decrease);
@@ -219,7 +219,7 @@ function Chat({ chats: initialChats }) {
       return (
         <div className="connection-error">
           Unable to connect to chat server. Messages will still be saved but real-time updates are disabled.
-          <button className="reconnect-btn" onClick={() => socket.connect()}>
+          <button className="reconnect-btn" onClick={reconnectSocket}>
             Try to reconnect
           </button>
         </div>
@@ -235,6 +235,11 @@ function Chat({ chats: initialChats }) {
     <div className="chat">
       <div className="messages">
         <h1>Messages</h1>
+        <div className={`connection-status ${connectionStatus}`}>
+          {connectionStatus === 'connected' && 'Connected to chat server'}
+          {connectionStatus === 'disconnected' && 'Connecting to chat server...'}
+          {connectionStatus === 'error' && 'Unable to connect to chat server'}
+        </div>
         {loading && !chat ? (
           <div className="loading">Loading conversations...</div>
         ) : error && !chat ? (

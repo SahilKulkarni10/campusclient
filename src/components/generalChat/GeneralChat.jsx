@@ -14,7 +14,7 @@ function GeneralChat() {
   const [typingUsers, setTypingUsers] = useState({});
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { currentUser } = useContext(AuthContext);
-  const { socket, connectionStatus } = useContext(SocketContext);
+  const { socket, connectionStatus, reconnectSocket } = useContext(SocketContext);
   const messageEndRef = useRef();
   const typingTimeoutRef = useRef(null);
 
@@ -177,7 +177,7 @@ function GeneralChat() {
       return (
         <div className="connection-error">
           Unable to connect to chat server. Messages will still be saved but real-time updates are disabled.
-          <button className="reconnect-btn" onClick={() => socket.connect()}>
+          <button className="reconnect-btn" onClick={reconnectSocket}>
             Try to reconnect
           </button>
         </div>
@@ -196,6 +196,11 @@ function GeneralChat() {
           <h2>Community Chat</h2>
           <div className="info">
             <span>{onlineUsers.length} user(s) online</span>
+            <div className={`connection-status ${connectionStatus}`}>
+              {connectionStatus === 'connected' && '• Connected'}
+              {connectionStatus === 'disconnected' && '• Connecting...'}
+              {connectionStatus === 'error' && '• Connection Error'}
+            </div>
           </div>
         </div>
         
