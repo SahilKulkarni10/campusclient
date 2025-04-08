@@ -1,4 +1,5 @@
-@import "../../responsive.scss";
+@use "../../responsive" as *;
+@use "sass:color";
 
 @keyframes fadeInUp {
   0% {
@@ -325,7 +326,7 @@
           transition: all 0.2s ease;
           
           &:hover {
-            background-color: darken(#4ecdc4, 10%);
+            background-color: color.scale(#4ecdc4, $lightness: -10%);
           }
         }
       }

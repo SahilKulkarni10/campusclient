@@ -4,6 +4,10 @@
   box-sizing: border-box;
 }
 
+html {
+  height: -webkit-fill-available; /* Mobile Safari */
+}
+
 a {
   text-decoration: none;
   color: inherit;
@@ -14,4 +18,33 @@ body{
   overflow-x: hidden;
   overflow-y: auto;
   min-height: 100vh;
+  min-height: -webkit-fill-available; /* Mobile Safari */
+  /* Safe area insets for iPhone X and newer */
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+/* Fix for input zooming issues on iPhone */
+input, 
+textarea, 
+select, 
+button {
+  font-size: 16px;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+/* Fix for 100vh issue in mobile browsers */
+:root {
+  --app-height: 100%;
+}
+
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific styles */
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  input {
+    -webkit-user-select: text;
+  }
 }
