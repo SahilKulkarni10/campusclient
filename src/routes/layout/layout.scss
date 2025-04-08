@@ -22,12 +22,33 @@
 
   @include sm {
     // background-color: rgb(239, 200, 200);
-    max-width: 640px;
+    max-width: 100%;
+    padding-left: 15px;
+    padding-right: 15px;
+    overflow-x: hidden;
+  }
+  
+  @include iphone-se {
+    padding-left: 10px;
+    padding-right: 10px;
   }
 
   .content {
     flex: 1;
     min-height: calc(100vh - 100px);
     overflow-y: auto;
+    
+    @include sm {
+      min-height: calc(100vh - 80px);
+      -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+    }
+  }
+  
+  /* Safe area insets for modern iOS devices */
+  @supports (padding: env(safe-area-inset-top)) {
+    padding-top: env(safe-area-inset-top);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+    padding-left: env(safe-area-inset-left);
   }
 }
